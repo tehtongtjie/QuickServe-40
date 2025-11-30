@@ -8,179 +8,158 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import models.User;
 
-public class LoginPanel extends JPanel {
 
-    // ============================================================
-    // 1. FIELD UTAMA & KONSTANTA
-    // ============================================================
+public class LoginPanel extends JPanel {
     private JFrame mainFrame;
     private CardLayout formCardLayout = new CardLayout();
-    private JPanel formContainer = new JPanel(formCardLayout);
+    private JPanel formContainer = new JPanel(formCardLayout); 
 
-    // Login
-    private JTextField loginUsernameField;
+    // Komponen UI
+    private JTextField loginUsernameField; 
     private JPasswordField loginPasswordField;
     private JButton loginTabButton;
 
-    // Register
     private JTextField regNamaField;
     private JTextField regEmailField;
     private JPasswordField regPasswordField;
     private JButton registerTabButton;
     private JButton daftarButton;
+    private JButton loginSubmitButton; 
 
-    private JButton loginSubmitButton;
-
-    private static final int CONTENT_WIDTH = 400;
-    private static final int CONTENT_HEIGHT = 550;
-    private static final int FIELD_WIDTH = 300;
-    private static final Color ORANGE_COLOR = new Color(255, 100, 0);
+    // Konfigurasi Konstanta
+    private static final int CONTENT_WIDTH = 400; // Lebar Konten utama (putih)
+    private static final int CONTENT_HEIGHT = 550; 
+    private static final int FIELD_WIDTH = 300; // Lebar input field
+    private static final Color ORANGE_COLOR = new Color(255, 100, 0); // Warna utama
     private static final Color DARK_ORANGE_COLOR = new Color(255, 50, 0);
 
-    
-    // ============================================================
-    // 2. KONSTRUKTOR UTAMA
-    // ============================================================
     public LoginPanel(JFrame parentFrame) {
         this.mainFrame = parentFrame;
-
-        setLayout(new GridBagLayout());
-
-        JPanel contentArea = createRoundedContentArea();
+        setLayout(new GridBagLayout()); 
+        
+        // --- Panel Konten Utama (Untuk Sudut Bulat) ---
+        JPanel contentArea = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                // Make corners subtler (less rounded)
+                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 12, 12)); 
+                g2.dispose();
+            }
+            @Override
+            public Dimension getPreferredSize() { 
+                return new Dimension(CONTENT_WIDTH, CONTENT_HEIGHT);
+            }
+            @Override
+            public Dimension getMaximumSize() { 
+                return getPreferredSize();
+            }
+        };
         contentArea.setLayout(new BoxLayout(contentArea, BoxLayout.Y_AXIS));
         contentArea.setBackground(Color.WHITE);
-        contentArea.setBorder(new EmptyBorder(30, 40, 30, 40));
+        // Border: Disesuaikan agar form tidak terlalu ke tepi
+        contentArea.setBorder(new EmptyBorder(30, 40, 30, 40)); 
 
-        // Logo
-        JLabel logo = loadLogo();
-        contentArea.add(logo);
+        // ===== LOGO IMAGE (SAFE & RESPONSIVE) =====
+        JLabel logo;
 
-        // Title + Subtitle
-        contentArea.add(makeTitle());
-        contentArea.add(makeSubtitle());
+        try {
+            // Pastikan path gambar benar di komputer Anda
+            ImageIcon sourceIcon = new ImageIcon(
+                "Assets/download.jpg"
+            );
 
-        // Tab Login/Register
-        JPanel tabPanel = createTabPanel();
-        contentArea.add(tabPanel);
+            // Resize gambar agar pas (maks 120px)
+            if (sourceIcon.getIconWidth() > 0) {
+                Image scaled = sourceIcon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+                ImageIcon finalIcon = new ImageIcon(scaled);
+                logo = new JLabel(finalIcon);
+            } else {
+                throw new Exception("Image not found");
+            }
 
-        // Form Container (CardLayout)
-        formContainer.setOpaque(false);
+        } catch (Exception e) {
+            // fallback jika gambar gagal dimuat
+            logo = new JLabel("LOGO");
+            logo.setFont(new Font("Arial", Font.BOLD, 20));
+            logo.setForeground(Color.DARK_GRAY);
+        }
+
+        // Tata letak logo
+        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        logo.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));  // jarak bawah
+
+        JLabel title = new JLabel("FoodOrder", SwingConstants.CENTER);
+        title.setFont(new Font("Montserrat", Font.BOLD, 24)); 
+        title.setForeground(ORANGE_COLOR); 
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitle = new JLabel("Pesan makanan favoritmu dengan mudah", SwingConstants.CENTER);
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        subtitle.setForeground(Color.GRAY);
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subtitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 2, 0)); 
+
+        // --- Tabs (Login / Register Button Group) ---
+        JPanel tabPanel = createTabPanel(); 
+        tabPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        tabPanel.setOpaque(false); 
+
+        // --- Form Container ---
+        formContainer.setOpaque(false); 
         formContainer.add(createLoginForm(), "LOGIN");
-        formContainer.add(createRegisterForm(), "REGISTER");
-        formContainer.setMaximumSize(new Dimension(CONTENT_WIDTH - 80, 450));
-
+        formContainer.add(createRegisterForm(), "REGISTER"); 
+        // Mengatur lebar maksimum sesuai lebar konten dikurangi padding
+        formContainer.setMaximumSize(new Dimension(CONTENT_WIDTH - 80, 450)); 
+        
+        // default to Register to match screenshot
         formCardLayout.show(formContainer, "REGISTER");
 
+        // --- Tambahkan Komponen ke Main Content ---
+        contentArea.add(logo);
+        contentArea.add(Box.createVerticalStrut(5));
+        contentArea.add(title);
+        contentArea.add(subtitle);
         contentArea.add(Box.createVerticalStrut(10));
+        contentArea.add(tabPanel);
+        contentArea.add(Box.createVerticalStrut(15)); 
         contentArea.add(formContainer);
-
-        add(contentArea);
+        
+        add(contentArea); 
     }
 
-
-    // ============================================================
-    // 3. BACKGROUND GRADIENT PANEL
-    // ============================================================
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g.create();
-
-        GradientPaint gp = new GradientPaint(
-            0, 0, ORANGE_COLOR,
-            getWidth(), getHeight(), DARK_ORANGE_COLOR
-        );
-
+        Graphics2D g2d = (Graphics2D) g.create(); 
+        
+        // Gradient background Orange Merah
+        GradientPaint gp = new GradientPaint(0, 0, new Color(255, 100, 0), 
+                                             getWidth(), getHeight(), new Color(255, 50, 0)); 
         g2d.setPaint(gp);
         g2d.fillRect(0, 0, getWidth(), getHeight());
         g2d.dispose();
     }
 
-
-    // ============================================================
-    // 4. BUAT AREA KONTEN DENGAN ROUND CORNER
-    // ============================================================
-    private JPanel createRoundedContentArea() {
-        return new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                g2.setColor(getBackground());
-                g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
-                g2.dispose();
-            }
-
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(CONTENT_WIDTH, CONTENT_HEIGHT);
-            }
-        };
-    }
-
-
-    // ============================================================
-    // 5. LOAD LOGO
-    // ============================================================
-    private JLabel loadLogo() {
-        JLabel logo;
-        try {
-            ImageIcon icon = new ImageIcon("Assets/download.jpg");
-
-            if (icon.getIconWidth() > 0) {
-                Image scaled = icon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
-                logo = new JLabel(new ImageIcon(scaled));
-            } else throw new Exception();
-
-        } catch (Exception e) {
-            logo = new JLabel("LOGO");
-            logo.setFont(new Font("Arial", Font.BOLD, 20));
-            logo.setForeground(Color.DARK_GRAY);
-        }
-        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        return logo;
-    }
-
-
-    // ============================================================
-    // 6. TITLE & SUBTITLE
-    // ============================================================
-    private JLabel makeTitle() {
-        JLabel title = new JLabel("FoodOrder", SwingConstants.CENTER);
-        title.setFont(new Font("Montserrat", Font.BOLD, 24));
-        title.setForeground(ORANGE_COLOR);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        return title;
-    }
-
-    private JLabel makeSubtitle() {
-        JLabel subtitle = new JLabel("Pesan makanan favoritmu dengan mudah", SwingConstants.CENTER);
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        subtitle.setForeground(Color.GRAY);
-        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        return subtitle;
-    }
-
-
-    // ============================================================
-    // 7. TAB LOGIN / REGISTER (BUTTON SWITCH)
-    // ============================================================
+    // --- Tab Methods ---
     private JPanel createTabPanel() {
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapper.setOpaque(false);
-
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60)); 
+        
         JPanel panel = new JPanel(new GridLayout(1, 2, 0, 0));
+        panel.setPreferredSize(new Dimension(FIELD_WIDTH, 45)); 
         panel.setOpaque(false);
-        panel.setPreferredSize(new Dimension(FIELD_WIDTH, 45));
-
+        
         loginTabButton = new JButton("Login");
         registerTabButton = new JButton("Register");
-
-        styleTabButton(loginTabButton, false, true);
-        styleTabButton(registerTabButton, true, false);
+        
+        // default state: Register active like screenshot
+        styleTabButton(loginTabButton, false, true); // Login inactive, left
+        styleTabButton(registerTabButton, true, false); // Register active, right
 
         loginTabButton.addActionListener(e -> {
             formCardLayout.show(formContainer, "LOGIN");
@@ -196,66 +175,101 @@ public class LoginPanel extends JPanel {
             clearLoginFields();
         });
 
+        // Make buttons full width (each half of FIELD_WIDTH)
+        int tabBtnW = FIELD_WIDTH / 2;
+        loginTabButton.setPreferredSize(new Dimension(tabBtnW, 45));
+        registerTabButton.setPreferredSize(new Dimension(tabBtnW, 45));
         panel.add(loginTabButton);
         panel.add(registerTabButton);
         wrapper.add(panel);
-
         return wrapper;
     }
 
+    /**
+     * @param isLeftButton true jika tombol kiri (Login), false jika kanan (Register)
+     */
+    private void styleTabButton(JButton button, boolean isActive, boolean isLeftButton) {
+        button.setOpaque(true);
+        button.setFocusPainted(false);
+        button.setFont(new Font("Arial", Font.PLAIN, 14)); // Font standar
+        
+        int radius = 8; // Radius sudut (reduced, subtler)
+        
+        if (isActive) {
+            // Active tab: light blue fill, orange outline
+            button.setBackground(new Color(225, 240, 255));
+            button.setForeground(Color.BLACK);
+            button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ORANGE_COLOR, 2, true),
+                BorderFactory.createEmptyBorder(0, 10, 0, 10)
+            ));
+        } else {
+            // Inactive: subtle gray
+            button.setBackground(new Color(245, 245, 245));
+            button.setForeground(Color.GRAY.darker());
+            button.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        }
 
-    // ============================================================
-    // 8. STYLE TAB BUTTON
-    // ============================================================
-    private void styleTabButton(JButton btn, boolean isActive, boolean isLeft) {
-        btn.setOpaque(true);
-        btn.setFocusPainted(false);
-        btn.setFont(new Font("Arial", Font.PLAIN, 14));
-
-        Color textColor = isActive ? Color.BLACK : Color.GRAY.darker();
-        btn.setForeground(textColor);
-
-        Color bgColor = isActive ? new Color(225, 240, 255) : new Color(245, 245, 245);
-        btn.setBackground(bgColor);
-
-        btn.setBorder(new TabRoundedBorder(
-            isActive ? ORANGE_COLOR : new Color(220, 220, 220),
-            1, 8, isLeft, isActive
-        ));
+        // Outer rounded border to create pill shape
+        button.setBorder(new TabRoundedBorder(isActive ? ORANGE_COLOR : new Color(220, 220, 220), 1, radius, isLeftButton, isActive));
     }
 
-
-    // ============================================================
-    // 9. LOGIN FORM
-    // ============================================================
+    // --- Bagian Membuat Form Login ---
     private JPanel createLoginForm() {
         JPanel form = new JPanel();
-        form.setOpaque(false);
+        form.setMaximumSize(new Dimension(FIELD_WIDTH, 450));
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.setOpaque(false); 
+        form.setBorder(new EmptyBorder(10, 0, 0, 0)); 
 
         loginUsernameField = new JTextField();
         loginPasswordField = new JPasswordField();
-
-        styleTextField(loginUsernameField, "nama@email.com");
+        
+        styleTextField(loginUsernameField, "nama@email.com"); 
         styleTextField(loginPasswordField, "Password");
-
+        
         loginSubmitButton = new CustomGradientButton("LOGIN SEKARANG", ORANGE_COLOR, DARK_ORANGE_COLOR);
-        styleSubmitButton(loginSubmitButton);
+        styleSubmitButton(loginSubmitButton); 
 
+        // Label Email
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        emailLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        form.add(emailLabel);
+        form.add(Box.createVerticalStrut(5));
+        
+        loginUsernameField.setMaximumSize(new Dimension(FIELD_WIDTH, 45));
+        loginUsernameField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(loginUsernameField);
+        form.add(Box.createVerticalStrut(15));
+        
+        // Label Password
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        form.add(passwordLabel);
+        form.add(Box.createVerticalStrut(5));
+        
+        loginPasswordField.setMaximumSize(new Dimension(FIELD_WIDTH, 45));
+        loginPasswordField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(loginPasswordField);
+        form.add(Box.createVerticalStrut(30));
+        
+        loginSubmitButton.setMaximumSize(new Dimension(FIELD_WIDTH, 50));
+        loginSubmitButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(loginSubmitButton);
+        
         loginSubmitButton.addActionListener(e -> attemptLogin());
-
-        addLoginComponents(form);
         return form;
     }
-
-
-    // ============================================================
-    // 10. REGISTER FORM
-    // ============================================================
+    
+    // --- Bagian Membuat Form Register ---
     private JPanel createRegisterForm() {
         JPanel form = new JPanel();
-        form.setOpaque(false);
+        form.setMaximumSize(new Dimension(FIELD_WIDTH, 450));
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
+        form.setOpaque(false); 
+        form.setBorder(new EmptyBorder(10, 0, 0, 0)); 
 
         regNamaField = new JTextField();
         regEmailField = new JTextField();
@@ -264,51 +278,110 @@ public class LoginPanel extends JPanel {
         styleTextField(regNamaField, "Nama Lengkap");
         styleTextField(regEmailField, "nama@email.com");
         styleTextField(regPasswordField, "Password");
-
+        
         daftarButton = new CustomGradientButton("DAFTAR SEKARANG", ORANGE_COLOR, DARK_ORANGE_COLOR);
-        styleSubmitButton(daftarButton);
-
+        styleSubmitButton(daftarButton); 
+        
+        // Label Nama Lengkap
+        JLabel namaLabel = new JLabel("Nama Lengkap:");
+        namaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        namaLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        form.add(namaLabel);
+        form.add(Box.createVerticalStrut(5));
+        
+        regNamaField.setMaximumSize(new Dimension(FIELD_WIDTH, 45));
+        regNamaField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(regNamaField);
+        form.add(Box.createVerticalStrut(15));
+        
+        // Label Email
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        emailLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        form.add(emailLabel);
+        form.add(Box.createVerticalStrut(5));
+        
+        regEmailField.setMaximumSize(new Dimension(FIELD_WIDTH, 45));
+        regEmailField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(regEmailField);
+        form.add(Box.createVerticalStrut(15));
+        
+        // Label Password
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        passwordLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        form.add(passwordLabel);
+        form.add(Box.createVerticalStrut(5));
+        
+        regPasswordField.setMaximumSize(new Dimension(FIELD_WIDTH, 45));
+        regPasswordField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(regPasswordField);
+        form.add(Box.createVerticalStrut(30)); 
+        
+        daftarButton.setMaximumSize(new Dimension(FIELD_WIDTH, 50));
+        daftarButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        form.add(daftarButton);
+        
         daftarButton.addActionListener(e -> attemptRegister());
-
-        addRegisterComponents(form);
         return form;
     }
 
-
-    // ============================================================
-    // 11. STYLE TEXTFIELD + PLACEHOLDER
-    // ============================================================
+    // --- Utility Methods untuk Styling ---
     private void styleTextField(JTextField field, String placeholder) {
+
+        // --- Layout & Size ---
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        field.setHorizontalAlignment(SwingConstants.LEFT);
         field.setMaximumSize(new Dimension(FIELD_WIDTH, 48));
-        field.setForeground(new Color(160, 160, 160));
+
+        // --- Base Style ---
+        field.setBackground(Color.WHITE);
+        field.setForeground(new Color(60, 60, 60));
+        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        field.setBorder(new RoundedBorder(new Color(210, 210, 210), 1, 12, true));
+
+        // === Placeholder Style ===
+        field.setForeground(new Color(160, 160, 160));      
         field.setFont(new Font("SansSerif", Font.ITALIC, 14));
         field.setText(placeholder);
 
-        field.setBorder(new RoundedBorder(new Color(210, 210, 210), 1, 12, true));
+        // --- Password placeholder specific ---
+        if (field instanceof JPasswordField) {
+            ((JPasswordField) field).setEchoChar((char) 0);
+        }
 
-        // Focus listener → placeholder logic
+        // --- Focus Listener ---
         field.addFocusListener(new java.awt.event.FocusAdapter() {
 
             @Override
             public void focusGained(java.awt.event.FocusEvent evt) {
-                if (field.getText().equals(placeholder)) {
+                boolean isPlaceholder = field.getText().equals(placeholder) ||
+                                        field.getForeground().equals(new Color(160,160,160));
+
+                if (isPlaceholder) {
                     field.setText("");
                     field.setForeground(new Color(40, 40, 40));
                     field.setFont(new Font("SansSerif", Font.PLAIN, 14));
                 }
 
-                if (field instanceof JPasswordField) {
+                // Password start masking
+                if (field instanceof JPasswordField && ((JPasswordField) field).getEchoChar() == 0) {
                     ((JPasswordField) field).setEchoChar('•');
                 }
 
-                field.setBorder(new RoundedBorder(ORANGE_COLOR, 2, 12, true));
+                // Smooth highlight border saat fokus
+                field.setBorder(new RoundedBorder(new Color(255, 140, 0), 2, 12, true));
             }
 
             @Override
             public void focusLost(java.awt.event.FocusEvent evt) {
-                boolean empty = (field instanceof JPasswordField)
-                    ? new String(((JPasswordField) field).getPassword()).isEmpty()
-                    : field.getText().trim().isEmpty();
+                boolean empty;
+                if (field instanceof JPasswordField) {
+                    char[] pw = ((JPasswordField) field).getPassword();
+                    empty = pw == null || new String(pw).isEmpty();
+                } else {
+                    empty = field.getText().trim().isEmpty();
+                }
 
                 if (empty) {
                     field.setText(placeholder);
@@ -320,225 +393,196 @@ public class LoginPanel extends JPanel {
                     }
                 }
 
+                // Kembalikan border normal
                 field.setBorder(new RoundedBorder(new Color(210, 210, 210), 1, 12, true));
             }
         });
     }
 
-
-    // ============================================================
-    // 12. STYLE BUTTON SUBMIT
-    // ============================================================
-    private void styleSubmitButton(JButton btn) {
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Montserrat", Font.BOLD, 16));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+    private void styleSubmitButton(JButton button) {
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Montserrat", Font.BOLD, 16));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); 
     }
-
-
-    // ============================================================
-    // 13. LOGIN LOGIC
-    // ============================================================
+    
+    // --- Logika Bisnis & Clear Fields ---
     private void attemptLogin() {
-        String user = loginUsernameField.getText();
-        String pass = new String(loginPasswordField.getPassword());
-
-        if (user.contains("@") == false || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Isi semua kolom dengan benar.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+        String username = loginUsernameField.getText();
+        String password = new String(loginPasswordField.getPassword());
+        
+        if (username.equals("nama@email.com") || username.isEmpty() || password.isEmpty() || password.equals("Password")) {
+             JOptionPane.showMessageDialog(this, "Semua kolom harus diisi dengan benar.", "Error", JOptionPane.ERROR_MESSAGE);
+             return;
         }
 
-        User loggedIn = ((Main) mainFrame).getDbHelper().login(user, pass);
-
-        if (loggedIn != null) {
-            JOptionPane.showMessageDialog(this, "Login Berhasil!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-            ((Main) mainFrame).setLoggedInUser(loggedIn);
+        // Catatan: Pastikan class Main memiliki method getDbHelper() dan konstanta HOME_VIEW
+        User loggedInUser = ((Main) mainFrame).getDbHelper().login(username, password);
+        if (loggedInUser != null) {
+            JOptionPane.showMessageDialog(this, "Login Berhasil! Selamat datang, " + loggedInUser.getUsername(), "Sukses", JOptionPane.INFORMATION_MESSAGE);
+            // pass the user object to the main/home panel so greeting and profile show the right details
+            ((Main) mainFrame).setLoggedInUser(loggedInUser);
             ((Main) mainFrame).showPanel(Main.HOME_VIEW);
         } else {
             JOptionPane.showMessageDialog(this, "Username atau Password salah.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-
-    // ============================================================
-    // 14. REGISTER LOGIC
-    // ============================================================
+    
     private void attemptRegister() {
         String nama = regNamaField.getText();
         String email = regEmailField.getText();
-        String pass = new String(regPasswordField.getPassword());
+        String password = new String(regPasswordField.getPassword());
 
-        if (nama.isEmpty() || email.isEmpty() || pass.isEmpty()) {
+        if (nama.equals("Nama Lengkap")) nama = "";
+        if (email.equals("nama@email.com")) email = "";
+        if (password.equals("Password")) password = ""; 
+
+        if (nama.isEmpty() || email.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Semua kolom harus diisi.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        boolean ok = ((Main) mainFrame).getDbHelper().register(nama, email, pass);
-
-        if (ok) {
-            JOptionPane.showMessageDialog(this, "Registrasi Berhasil!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-            loginTabButton.doClick();
+        // Catatan: Pastikan class Main memiliki method getDbHelper()
+        if (((Main) mainFrame).getDbHelper().register(nama, email, password)) {
+            JOptionPane.showMessageDialog(this, "Registrasi Berhasil! Silakan Login.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+            loginTabButton.doClick(); 
         } else {
-            JOptionPane.showMessageDialog(this, "Email sudah terdaftar.", "Error", JOptionPane.ERROR_MESSAGE);
+             JOptionPane.showMessageDialog(this, "Registrasi Gagal (Email mungkin sudah terdaftar).", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-
-    // ============================================================
-    // 15. CLEAR FIELDS
-    // ============================================================
     private void clearLoginFields() {
-        loginUsernameField.setText("nama@email.com");
+        loginUsernameField.setText("nama@email.com"); 
+        loginUsernameField.setForeground(new Color(160, 160, 160));
+        loginUsernameField.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        
         loginPasswordField.setText("Password");
+        loginPasswordField.setForeground(new Color(160, 160, 160));
+        loginPasswordField.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        loginPasswordField.setEchoChar((char) 0);
     }
 
     private void clearRegisterFields() {
         regNamaField.setText("Nama Lengkap");
+        regNamaField.setForeground(new Color(160, 160, 160));
+        regNamaField.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        
         regEmailField.setText("nama@email.com");
+        regEmailField.setForeground(new Color(160, 160, 160));
+        regEmailField.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        
         regPasswordField.setText("Password");
+        regPasswordField.setForeground(new Color(160, 160, 160));
+        regPasswordField.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        regPasswordField.setEchoChar((char) 0);
+    }
+} 
+// END OF LoginPanel CLASS
+
+// --- Helper Classes (Non-Public, placed in same file) ---
+
+class RoundedBorder implements Border {
+    private int radius;
+    private Color color;
+    private int thickness;
+    private boolean isTextField; 
+
+    public RoundedBorder(Color color, int thickness, int radius, boolean isTextField) {
+        this.radius = radius;
+        this.color = color;
+        this.thickness = thickness;
+        this.isTextField = isTextField;
     }
 
-
-    // ============================================================
-    // 16. SUB KOMPONEN (UNTUK LOGIN/REGISTER FORM)
-    // ============================================================
-    private void addLoginComponents(JPanel form) {
-        form.add(new JLabel("Email:"));
-        form.add(loginUsernameField);
-        form.add(Box.createVerticalStrut(10));
-
-        form.add(new JLabel("Password:"));
-        form.add(loginPasswordField);
-        form.add(Box.createVerticalStrut(20));
-
-        form.add(loginSubmitButton);
+    public Insets getBorderInsets(Component c) {
+        if (isTextField) {
+            return new Insets(8, 12, 8, 12); 
+        }
+        return new Insets(this.radius/2 + 2, this.radius/2 + 2, this.radius/2 + 2, this.radius/2 + 2);
     }
 
-    private void addRegisterComponents(JPanel form) {
-        form.add(new JLabel("Nama Lengkap:"));
-        form.add(regNamaField);
-        form.add(Box.createVerticalStrut(10));
-
-        form.add(new JLabel("Email:"));
-        form.add(regEmailField);
-        form.add(Box.createVerticalStrut(10));
-
-        form.add(new JLabel("Password:"));
-        form.add(regPasswordField);
-        form.add(Box.createVerticalStrut(20));
-
-        form.add(daftarButton);
+    public boolean isBorderOpaque() {
+        return true;
     }
 
-    // ============================================================
-    // 17. Helper Class: RoundedBorder
-    // ============================================================
-    class RoundedBorder implements Border {
-        private int radius;
-        private Color color;
-        private int thickness;
-        private boolean isTextField;
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(thickness));
+        
+        g2.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
+        g2.dispose();
+    }
+}
 
-        public RoundedBorder(Color color, int thickness, int radius, boolean isTextField) {
-            this.radius = radius;
-            this.color = color;
-            this.thickness = thickness;
-            this.isTextField = isTextField;
-        }
+class TabRoundedBorder implements Border {
+    private int radius;
+    private Color color;
+    private int thickness;
+    private boolean isLeftButton; 
+    private boolean isActive;
 
-        public Insets getBorderInsets(Component c) {
-            if (isTextField) {
-                return new Insets(8, 12, 8, 12);
-            }
-            return new Insets(6, 6, 6, 6);
-        }
-
-        public boolean isBorderOpaque() {
-            return true;
-        }
-
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(color);
-            g2.setStroke(new BasicStroke(thickness));
-
-            g2.draw(new RoundRectangle2D.Double(x, y, width - 1, height - 1, radius, radius));
-            g2.dispose();
-        }
+    public TabRoundedBorder(Color color, int thickness, int radius, boolean isLeftButton, boolean isActive) {
+        this.radius = radius;
+        this.color = color;
+        this.thickness = thickness;
+        this.isLeftButton = isLeftButton;
+        this.isActive = isActive;
     }
 
-    // ============================================================
-    // 18. Helper Class: TabRoundedBorder
-    // ============================================================
-    class TabRoundedBorder implements Border {
-        private int radius;
-        private Color color;
-        private int thickness;
-        private boolean isLeftButton;
-        private boolean isActive;
-
-        public TabRoundedBorder(Color color, int thickness, int radius, boolean isLeftButton, boolean isActive) {
-            this.radius = radius;
-            this.color = color;
-            this.thickness = thickness;
-            this.isLeftButton = isLeftButton;
-            this.isActive = isActive;
-        }
-
-        public Insets getBorderInsets(Component c) {
-            return new Insets(8, 12, 8, 12);
-        }
-
-        public boolean isBorderOpaque() {
-            return true;
-        }
-
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            g2.setColor(color);
-            g2.setStroke(new BasicStroke(thickness));
-
-            int arc = radius * 2;
-            g2.draw(new RoundRectangle2D.Double(x, y, width - thickness, height - thickness, arc, arc));
-
-            g2.dispose();
-        }
+    public Insets getBorderInsets(Component c) {
+         return new Insets(8, 12, 8, 12);
     }
 
-    // ============================================================
-    // 20. Helper Class: CustomGradientButton
-    // ============================================================
-    class CustomGradientButton extends JButton {
-        private Color startColor;
-        private Color endColor;
-        private int radius = 8;
-
-        public CustomGradientButton(String text, Color startColor, Color endColor) {
-            super(text);
-            this.startColor = startColor;
-            this.endColor = endColor;
-            setContentAreaFilled(false);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            GradientPaint gp = new GradientPaint(0, 0, startColor, 0, getHeight(), endColor);
-            g2.setPaint(gp);
-            g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, radius, radius));
-
-            super.paintComponent(g);
-            g2.dispose();
-        }
-
-        @Override
-        protected void paintBorder(Graphics g) { }
+    public boolean isBorderOpaque() {
+        return true;
     }
+
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        g2.setColor(color);
+        g2.setStroke(new BasicStroke(thickness));
+        
+        int arc = radius * 2;
+        
+        // Menggambar garis luar rounded
+        g2.draw(new RoundRectangle2D.Double(x, y, width - thickness, height - thickness, arc, arc));
+        
+        g2.dispose();
     }
+}
+
+class CustomGradientButton extends JButton {
+    private Color startColor;
+    private Color endColor;
+    private int radius = 8; 
+
+    public CustomGradientButton(String text, Color startColor, Color endColor) {
+        super(text);
+        this.startColor = startColor;
+        this.endColor = endColor;
+        setContentAreaFilled(false); 
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        GradientPaint gp = new GradientPaint(0, 0, startColor, 0, getHeight(), endColor);
+        g2.setPaint(gp);
+        g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - 1, getHeight() - 1, radius, radius));
+        
+        super.paintComponent(g); 
+        g2.dispose();
+    }
+
+    @Override
+    protected void paintBorder(Graphics g) {
+        // Hapus border default
+    }
+}
