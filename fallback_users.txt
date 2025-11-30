@@ -1,0 +1,3 @@
+user@example.com|User|password
+tan@gmail.com|tan|123
+nabila@example.com|Nabila|password
