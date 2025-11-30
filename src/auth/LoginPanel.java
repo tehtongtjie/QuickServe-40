@@ -583,6 +583,6 @@ class CustomGradientButton extends JButton {
 
     @Override
     protected void paintBorder(Graphics g) {
-        // Hapus border default
+        // Hapus border default pada login
     }
 }
